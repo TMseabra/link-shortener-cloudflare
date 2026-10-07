@@ -1,10 +1,12 @@
 # link-shortener-cloudflare
 
+![Cloudflare Workers](https://img.shields.io/badge/Cloudflare_Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![D1](https://img.shields.io/badge/D1-SQLite-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
+
 A URL shortener with click analytics, running on Cloudflare Workers with a D1 (SQLite) database. You create a short link, share it, and the dashboard shows who clicked: when, from which country, on what device and where they came from.
 
-**Live:** https://encurtador.tseabra2009.workers.dev/admin
-
-<!-- TODO: add a screenshot of the dashboard -->
+<!-- TODO: add a screenshot of the dashboard and the live link after the first deploy -->
 
 ## What it does
 
@@ -119,13 +121,13 @@ Errors: `400` for an invalid URL or slug, `401` without a valid token, `409` if 
 
 Work in progress, built in phases:
 
-- [x] Setup (Worker running locally with Wrangler)
-- [x] Database schema (D1)
-- [x] Create links and redirect
-- [x] Click analytics
-- [x] Token authentication
-- [x] Dashboard
-- [x] Deploy
+- [ ] Setup (Worker running locally with Wrangler)
+- [ ] Database schema (D1)
+- [ ] Create links and redirect
+- [ ] Click analytics
+- [ ] Token authentication
+- [ ] Dashboard
+- [ ] Deploy
 - [ ] README with screenshot and live link
 
 ## Next steps
