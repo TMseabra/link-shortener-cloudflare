@@ -2,7 +2,9 @@
 
 A URL shortener with click analytics, running on Cloudflare Workers with a D1 (SQLite) database. You create a short link, share it, and the dashboard shows who clicked: when, from which country, on what device and where they came from.
 
-<!-- TODO: add a screenshot of the dashboard and the live link after the first deploy -->
+**Live:** https://encurtador.tseabra2009.workers.dev/admin
+
+<!-- TODO: add a screenshot of the dashboard -->
 
 ## What it does
 
@@ -123,7 +125,7 @@ Work in progress, built in phases:
 - [x] Click analytics
 - [x] Token authentication
 - [x] Dashboard
-- [ ] Deploy
+- [x] Deploy
 - [ ] README with screenshot and live link
 
 ## Next steps
