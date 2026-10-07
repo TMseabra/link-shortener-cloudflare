@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Link shortener admin</title>
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#666; --line:#e2e2e2; --accent:#f6821f; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#16181d; --fg:#eee; --muted:#999; --line:#2c2f36; } }
+  body { font:15px system-ui,sans-serif; background:var(--bg); color:var(--fg); max-width:900px; margin:0 auto; padding:24px 16px; }
+  h1 { font-size:20px; }
+  form, .row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+  input, button { font:inherit; padding:8px 10px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--fg); }
+  input { flex:1; min-width:160px; }
+  button { cursor:pointer; background:var(--accent); color:#fff; border-color:var(--accent); }
+  button.ghost { background:none; color:var(--fg); border-color:var(--line); }
+  table { width:100%; border-collapse:collapse; }
+  th, td { text-align:left; padding:8px; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+  td.num { text-align:right; }
+  .muted { color:var(--muted); }
+  .bars { display:flex; align-items:flex-end; gap:2px; height:120px; margin:12px 0; }
+  .bars div { flex:1; background:var(--accent); min-height:1px; border-radius:2px 2px 0 0; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; }
+  #error { color:#d33; }
+</style>
+</head>
+<body>
+<h1>Link shortener</h1>
+
+<div class="row" id="auth">
+  <input id="token" type="password" placeholder="Admin token">
+  <button id="save">Sign in</button>
+</div>
+<p id="error"></p>
+
+<form id="create">
+  <input id="url" type="url" placeholder="https://example.com/long/url" required>
+  <input id="slug" placeholder="custom slug (optional)">
+  <button>Create</button>
+</form>
+
+<table>
+  <thead><tr><th>Slug</th><th>URL</th><th class="num">Clicks</th><th></th></tr></thead>
+  <tbody id="links"></tbody>
+</table>
+
+<section id="stats" hidden>
+  <h2 id="stats-title"></h2>
+  <p class="muted">Clicks per day, last 30 days</p>
+  <div class="bars" id="bars"></div>
+  <div class="grid">
+    <div><h3>Country</h3><ul id="byCountry"></ul></div>
+    <div><h3>Device</h3><ul id="byDevice"></ul></div>
+    <div><h3>Source</h3><ul id="bySource"></ul></div>
+  </div>
+</section>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const err = (msg) => { $("error").textContent = msg || ""; };
+let token = localStorage.getItem("admin_token") || "";
+$("token").value = token;
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, {
+    ...opts,
+    headers: { ...(opts.headers || {}), Authorization: "Bearer " + token, "Content-Type": "application/json" },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data;
+}
+
+function text(tag, value, cls) {
+  const el = document.createElement(tag);
+  el.textContent = value;
+  if (cls) el.className = cls;
+  return el;
+}
+
+async function load() {
+  err();
+  try {
+    const links = await api("/api/links");
+    const body = $("links");
+    body.replaceChildren();
+    for (const l of links) {
+      const tr = document.createElement("tr");
+      const slugCell = document.createElement("td");
+      const a = text("a", "/" + l.slug);
+      a.href = "/" + l.slug; a.target = "_blank";
+      slugCell.append(a);
+      const actions = document.createElement("td");
+      const stats = text("button", "Stats", "ghost");
+      stats.onclick = () => showStats(l.slug);
+      const del = text("button", "Delete", "ghost");
+      del.onclick = async () => {
+        if (!confirm("Delete /" + l.slug + " and its clicks?")) return;
+        try { await api("/api/links/" + encodeURIComponent(l.slug), { method: "DELETE" }); $("stats").hidden = true; load(); }
+        catch (e) { err(e.message); }
+      };
+      actions.append(stats, " ", del);
+      tr.append(slugCell, text("td", l.url, "muted"), text("td", l.clicks, "num"), actions);
+      body.append(tr);
+    }
+  } catch (e) { err(e.message); }
+}
+
+function list(id, rows) {
+  const ul = $(id);
+  ul.replaceChildren();
+  if (!rows.length) ul.append(text("li", "No data", "muted"));
+  for (const r of rows) ul.append(text("li", r.label + ": " + r.count));
+}
+
+async function showStats(slug) {
+  err();
+  try {
+    const s = await api("/api/links/" + encodeURIComponent(slug) + "/stats");
+    $("stats").hidden = false;
+    $("stats-title").textContent = "/" + slug + " — " + s.total + " clicks";
+    const days = new Map(s.byDay.map((d) => [d.day, d.count]));
+    const bars = $("bars");
+    bars.replaceChildren();
+    const series = [];
+    for (let i = 29; i >= 0; i--) {
+      const day = new Date(Date.now() - i * 864e5).toISOString().slice(0, 10);
+      series.push([day, days.get(day) || 0]);
+    }
+    const max = Math.max(1, ...series.map((x) => x[1]));
+    for (const [day, n] of series) {
+      const bar = document.createElement("div");
+      bar.style.height = (n / max) * 100 + "%";
+      bar.title = day + ": " + n;
+      bars.append(bar);
+    }
+    list("byCountry", s.byCountry);
+    list("byDevice", s.byDevice);
+    list("bySource", s.bySource);
+  } catch (e) { err(e.message); }
+}
+
+$("save").onclick = () => {
+  token = $("token").value.trim();
+  localStorage.setItem("admin_token", token);
+  load();
+};
+
+$("create").onsubmit = async (ev) => {
+  ev.preventDefault();
+  err();
+  try {
+    await api("/api/links", { method: "POST", body: JSON.stringify({ url: $("url").value, slug: $("slug").value.trim() }) });
+    $("url").value = ""; $("slug").value = "";
+    load();
+  } catch (e) { err(e.message); }
+};
+
+if (token) load();
+</script>
+</body>
+</html>
