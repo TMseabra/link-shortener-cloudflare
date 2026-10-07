@@ -117,12 +117,12 @@ Errors: `400` for an invalid URL or slug, `401` without a valid token, `409` if 
 
 Work in progress, built in phases:
 
-- [ ] Setup (Worker running locally with Wrangler)
-- [ ] Database schema (D1)
-- [ ] Create links and redirect
-- [ ] Click analytics
-- [ ] Token authentication
-- [ ] Dashboard
+- [x] Setup (Worker running locally with Wrangler)
+- [x] Database schema (D1)
+- [x] Create links and redirect
+- [x] Click analytics
+- [x] Token authentication
+- [x] Dashboard
 - [ ] Deploy
 - [ ] README with screenshot and live link
 

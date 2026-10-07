@@ -55,7 +55,7 @@ function authorized(request: Request, env: Env): boolean {
   return diff === 0;
 }
 
-async function createLink(request: Request, env: Env, selfHost: string): Promise<Response> {
+async function createLink(request: Request, env: Env, selfHost: string, origin: string): Promise<Response> {
   let body: { url?: unknown; slug?: unknown };
   try {
     body = await request.json();
@@ -87,7 +87,7 @@ async function createLink(request: Request, env: Env, selfHost: string): Promise
       await env.DB.prepare("INSERT INTO links (slug, url, created_at) VALUES (?, ?, ?)")
         .bind(slug, target.toString(), Date.now())
         .run();
-      return json({ slug, url: target.toString(), short: `https://${selfHost}/${slug}` }, 201);
+      return json({ slug, url: target.toString(), short: `${origin}/${slug}` }, 201);
     } catch (e) {
       if (!String(e).includes("UNIQUE")) throw e;
       if (custom) return json({ error: "Slug already exists" }, 409);
@@ -188,7 +188,7 @@ export default {
       if (parts[1] !== "links") return json({ error: "Not found" }, 404);
 
       if (parts.length === 2) {
-        if (request.method === "POST") return createLink(request, env, url.hostname);
+        if (request.method === "POST") return createLink(request, env, url.hostname, url.origin);
         if (request.method === "GET") return listLinks(env);
       } else if (parts.length === 3 && request.method === "DELETE") {
         return deleteLink(env, decodeURIComponent(parts[2]));
