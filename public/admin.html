@@ -22,6 +22,11 @@
   .bars div { flex:1; background:var(--accent); min-height:1px; border-radius:2px 2px 0 0; }
   .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; }
   #error { color:#d33; }
+  .rules { margin-top:32px; border-top:1px solid var(--line); padding-top:8px; }
+  .rules h2 { font-size:16px; }
+  .rules h3 { font-size:14px; margin-bottom:4px; }
+  .rules li { margin:2px 0; }
+  code { background:var(--line); padding:1px 5px; border-radius:4px; }
 </style>
 </head>
 <body>
@@ -53,6 +58,31 @@
     <div><h3>Device</h3><ul id="byDevice"></ul></div>
     <div><h3>Source</h3><ul id="bySource"></ul></div>
   </div>
+</section>
+
+<section class="rules">
+  <h2>Rules</h2>
+  <h3>Creating a link</h3>
+  <ul>
+    <li>The URL must start with <code>http://</code> or <code>https://</code>.</li>
+    <li>It can't point to this site (that would cause a redirect loop).</li>
+    <li>Leave the slug empty to get a random 6-character one, e.g. <code>j5CjH4</code>.</li>
+  </ul>
+  <h3>Custom slug</h3>
+  <ul>
+    <li>1 to 64 characters: letters, numbers, <code>-</code> and <code>_</code> only.</li>
+    <li>No spaces, accents or symbols.</li>
+    <li>Uppercase and lowercase are different: <code>Promo</code> and <code>promo</code> are two links.</li>
+    <li><code>api</code> and <code>admin</code> are reserved.</li>
+    <li>If the slug is already taken you get an error, so pick another one.</li>
+  </ul>
+  <h3>How long it works</h3>
+  <ul>
+    <li>Anyone can open a short link, no login needed. Only this dashboard needs the token.</li>
+    <li>Links never expire. They work until you press Delete.</li>
+    <li>Every click is counted: country, device, browser and where it came from.</li>
+    <li>Deleting a link also deletes its stats, and the slug becomes free again.</li>
+  </ul>
 </section>
 
 <script>
